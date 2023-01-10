@@ -207,8 +207,11 @@ if __name__ == '__main__':
         await ctx.send(f"{ctx.author.display_name} has cleared the yt links 😉")
         yt_links.pop(ctx.guild.id)
 
-    # Run the bot requires TOKEN in .env file/environment variables
-    my_bot.run(environ['TOKEN'])
+    try:
+        # Run the bot requires TOKEN in .env file/environment variables
+        my_bot.run(environ['TOKEN'])
+    except KeyError:
+        print('You have not set a TOKEN environment variable')
 
     # A way to keep the bot on that JUST WORKS
     from threading import Thread
