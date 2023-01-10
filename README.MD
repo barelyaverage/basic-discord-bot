@@ -6,4 +6,10 @@ This bot can do it all:
 
 It works✅
 
-Needs a .env file with TOKEN=your bot token 🤓
+Bot permissions:
+-Read messages
+-Send messages
+-Manage messages
+-Attach files
+
+Needs TOKEN='your bot token' in your environment variables/.env file 🤓
