@@ -20,9 +20,8 @@ if __name__ == '__main__':
     intents.messages = True
     intents.message_content = True
 
-    # Create a bot requires DESC in .env file
+    # Create a bot requires
     my_bot = Bot(command_prefix='//', intents=intents)
-    my_bot.description = env.get('DESC')
 
     # Runs when the bot is ready
     @my_bot.event
@@ -208,7 +207,7 @@ if __name__ == '__main__':
         yt_links.pop(ctx.guild.id)
 
     # Run the bot requires KEY in .env file
-    my_bot.run(env.get('KEY'))
+    my_bot.run(env.get('TOKEN'))
 
     # A way to keep the bot on that JUST WORKS
     from threading import Thread
