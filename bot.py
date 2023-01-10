@@ -4,10 +4,11 @@ import asyncio
 import random
 import dotenv
 import validators
+from os import environ
 
 if __name__ == '__main__':
     # Load .env variables
-    env = dotenv.dotenv_values('.env')
+    dotenv.load_dotenv()
 
     # Ballot dictionary
     ballots = {}
@@ -206,8 +207,8 @@ if __name__ == '__main__':
         await ctx.send(f"{ctx.author.display_name} has cleared the yt links 😉")
         yt_links.pop(ctx.guild.id)
 
-    # Run the bot requires KEY in .env file
-    my_bot.run(env.get('TOKEN'))
+    # Run the bot requires TOKEN in .env file/environment variables
+    my_bot.run(environ['TOKEN'])
 
     # A way to keep the bot on that JUST WORKS
     from threading import Thread
