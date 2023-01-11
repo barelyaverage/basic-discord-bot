@@ -6,7 +6,7 @@ import dotenv
 import validators
 from os import environ
 
-if __name__ == '__main__':
+def main():
     # Load .env variables
     dotenv.load_dotenv()
 
@@ -213,9 +213,8 @@ if __name__ == '__main__':
     except KeyError:
         print('You have not set a TOKEN environment variable')
 
-    # A way to keep the bot on that JUST WORKS
-    from threading import Thread
-    from flask import Flask
+# A way to keep the bot on that JUST WORKS
+from threading import Thread
 
-    t = Thread(target=Flask('').run())
-    t.start()
+t = Thread(target=main())
+t.start()
