@@ -29,15 +29,15 @@ def main():
     async def on_ready():
         print(f'Logged on as {my_bot.user}!')
 
-    # Calls the user sad lol
+    # Calls the user sad
     @my_bot.command()
-    async def sad(ctx: Context):
+    async def me(ctx: Context):
         # Delete user's message because commands aren't fun to look at
         await ctx.message.delete()
 
-        # Send them their picture showing how sad they look 😠
+        # Send them their picture showing how sad they look
         async with ctx.typing():
-            await ctx.send(f'You sure do look sad 🙂', file = await ctx.author.display_avatar.to_file())
+            await ctx.send(f'@{ctx.author.display_name} is this you 🤔', file = await ctx.author.display_avatar.to_file())
 
     # Greets the user, unless there are no emojis
     @my_bot.command()
@@ -53,7 +53,32 @@ def main():
         
         await ctx.send(f"{ctx.guild} has no emojis ☹️ what are you waiting for {ctx.author.display_name} 🤨", delete_after=5)
 
-    # Casts a vote for whatever they want
+    # Add candidates to the ballot
+    @my_bot.command()
+    async def add(ctx: Context, *args: str):
+        # Delete user's message for CONFIDENTIALITY REASONS
+        await ctx.message.delete()
+
+        # Check for required role to be able to show results
+        if not [role for role in ctx.author.roles if role.name == 'Voting Official' and role.guild == ctx.guild] and not ctx.author.id == ctx.guild.owner_id:
+            await ctx.send(f"{ctx.author.display_name} is not a 'Voting Official' in {ctx.guild} 😝", delete_after=5)
+            return
+
+        if not ballots.get(ctx.guild.id):
+            ballots[ctx.guild.id] = {}
+
+        votes = ballots[ctx.guild.id]
+
+        new_count = 0
+        for name in args:
+            if name not in votes:
+                votes[name] = 0
+                new_count += 1
+
+        await ctx.send(f"{new_count} new candidates have been added 😬", delete_after=5)
+        return        
+
+    # Casts a vote for an option on the ballot
     @my_bot.command()
     async def vote(ctx: Context, *, arg: str):
         # Delete user's message for CONFIDENTIALITY REASONS
@@ -63,50 +88,42 @@ def main():
         if not [role for role in ctx.author.roles if role.name == 'Registered Voter' and role.guild == ctx.guild] and not ctx.author.id == ctx.guild.owner_id:
              await ctx.send(f"{ctx.author.display_name} is not a 'Registered Voter' in {ctx.guild} 😏", delete_after=5)
              return
-        try:
-            votes = ballots.get(ctx.guild.id)
-            name = arg.upper()
-            
-            if votes:
-                if name in votes:
-                    votes[name] += 1
-                    ballots[ctx.guild.id] = votes
-                    await ctx.send(f"{name} has received one more vote 🤩", delete_after=5)
-                    return
 
-                votes[name] = 1
+        votes = ballots.get(ctx.guild.id)
+        name = arg.strip()
+        
+        if votes:
+            if name in votes:
+                votes[name] += 1
                 ballots[ctx.guild.id] = votes
-                await ctx.send(f"{name} has received one vote and is now in the running :face_with_peeking_eye:", delete_after=5)
+                await ctx.send(f"{name} has received a vote 🤩", delete_after=5)
                 return
 
-            ballots[ctx.guild.id] = {}
-            ballots[ctx.guild.id][name] = 1
-            await ctx.send(f"{name} has received one vote and is now in the running :face_with_peeking_eye:", delete_after=5)
+            votes[name] = 1
+            ballots[ctx.guild.id] = votes
+            await ctx.send(f"{name} is currently not a candidate 🤗", delete_after=5)
             return
+        
+        await ctx.send(f"{ctx.guild} does not have a vote going on right now 😅", delete_after=5)
+        return
 
-        except Exception:
-            await ctx.send('Voting kinda broke 🤓', delete_after=5)
-
-    # Lists all candidates that have received votes
+    # Lists all candidates on the ballot
     @my_bot.command()
     async def candidates(ctx: Context):
         # Delete user's message for CONFIDENTIALITY REASONS
         await ctx.message.delete()
 
-        try:
-            votes = ballots.get(ctx.guild.id)
+        votes = ballots.get(ctx.guild.id)
 
-            if votes:
-                all_names = '❗Current candidates❗\n'
-                for each in votes:
-                    all_names += f"◻️ {each}\n"
-                await ctx.send(all_names, delete_after=5+len(votes))
-                return
-
-            await ctx.send(f"{ctx.guild} is currently not voting for anything 😐", delete_after=5)
+        if votes:
+            all_names = 'Current candidates 💬\n'
+            for each in votes:
+                all_names += f"◻️ {each}\n"
+            await ctx.send(all_names, delete_after=5*len(votes))
             return
-        except Exception:
-            await ctx.send('Voting kinda broke 🤓', delete_after=5)
+
+        await ctx.send(f"{ctx.guild} is not voting for anything 😐", delete_after=5)
+        return
 
     # Announce the winner(s) with the most votes and delete the current ballot
     @my_bot.command()
@@ -118,94 +135,54 @@ def main():
         if not [role for role in ctx.author.roles if role.name == 'Voting Official' and role.guild == ctx.guild] and not ctx.author.id == ctx.guild.owner_id:
             await ctx.send(f"{ctx.author.display_name} is not a 'Voting Official' in {ctx.guild} 😝", delete_after=5)
             return
-        try:
-            votes = ballots.get(ctx.guild.id)
 
-            if votes:
-                highest_count = 0
-                for each in votes:
-                    if votes[each] > highest_count:
-                        highest_count = votes[each]
-                
-                winners = [x for x in votes if votes[x] == highest_count]
-                async with ctx.typing():
-                    await ctx.send('The results are in...😳', delete_after=2)
-                    await asyncio.sleep(2.0)
+        votes = ballots.get(ctx.guild.id)
 
-                    if len(winners) == 1:
-                        await ctx.send(f"🏆 {winners[0]} 🏆 has won with {highest_count} votes 🥳")
-                        ballots.pop(ctx.guild.id)
-                        return
+        if votes:
+            highest_count = 0
+            for each in votes:
+                if votes[each] > highest_count:
+                    highest_count = votes[each]
+            
+            winners = [x for x in votes if votes[x] == highest_count]
+            async with ctx.typing():
+                await ctx.send('The results are in...😳', delete_after=2)
+                await asyncio.sleep(2.0)
 
-                    await ctx.send(f"A {len(winners)}-way tie with {highest_count} votes 😲", delete_after=5)
-                    await asyncio.sleep(1.0)
-                    results = '🏆 WINNERS 🏆\n'
-                    for each in winners:
-                        results += f"✨ {each}\n"
-                    await ctx.send(results)
+                if len(winners) == 1:
+                    await ctx.send(f"🏆 {winners[0]} 🏆 has won the vote 🥳")
                     ballots.pop(ctx.guild.id)
                     return
-            await ctx.send('No votes have been casted 😂', delete_after=5)
-            return
 
-        except Exception:
-            await ctx.send('Voting kinda broke 🤓', delete_after=5)
-            return
-
-    # Add a yt link to list
-    @my_bot.command()
-    async def addyt(ctx: Context, arg:str):
-        # Delete user's message because commands aren't fun to look at
-        await ctx.message.delete()
-
-        # Check for required role to be able to show results
-        if not [role for role in ctx.author.roles if role.name == 'yt admin' and role.guild == ctx.guild] and not ctx.author.id == ctx.guild.owner_id:
-            await ctx.send(f"{ctx.author.display_name} is not a 'yt admin' in {ctx.guild} 😒", delete_after=5)
-            return
-
-        # Check if the url is valid
-        if not validators.url(arg.strip()) or not (arg.find('www.youtube.com/') or arg.find('/youtu.be/')):
-            await ctx.send(f" {ctx.author.display_name} did not send a valid youtube link 😧", delete_after=5)
-            return
-
-        # Add link to the list for the server
-        if yt_links.get(ctx.guild.id):
-            yt_links[ctx.guild.id].append(arg.strip())
-            await ctx.send(f"{arg.strip()} was added to the list of yt links by {ctx.author.display_name}😨", delete_after=5)
-            return
-
-        yt_links[ctx.guild.id] = [arg.strip()]
-        await ctx.send(f"{arg.strip()} was added to the list of yt links by {ctx.author.display_name}😨", delete_after=5)
-
-    # Get a random yt link
-    @my_bot.command()
-    async def getyt(ctx: Context):
-        # Delete user's message because commands aren't fun to look at
-        await ctx.message.delete()
-
-        if yt_links.get(ctx.guild.id):
-            if yt_links[ctx.guild.id]:
-                link = random.choice(yt_links[ctx.guild.id])
-                yt_links[ctx.guild.id].remove(link)
-                await ctx.send(f"{link} 🤔")
+                await ctx.send(f"A {len(winners)}-way tie 😲")
+                await asyncio.sleep(1.0)
+                results = '🏆 WINNERS 🏆\n'
+                for each in winners:
+                    results += f"✨ {each}\n"
+                await ctx.send(results)
+                ballots.pop(ctx.guild.id)
                 return
 
-        await ctx.send(f"There are no yt links 😊", delete_after=5)
+        await ctx.send(f"{ctx.guild} has not voted for anything 😂", delete_after=5)
         return
 
-    # Clear yt links
+    # List all candidates with their vote count
     @my_bot.command()
-    async def clearyt(ctx: Context):
-        # Delete user's message because commands aren't fun to look at
+    async def standings(ctx: Context):
+        # Delete user's message for CONFIDENTIALITY REASONS
         await ctx.message.delete()
 
-        # Check for required role to be able to show results
-        if not [role for role in ctx.author.roles if role.name == 'yt admin' and role.guild == ctx.guild] and not ctx.author.id == ctx.guild.owner_id:
-            await ctx.send(f"{ctx.author.display_name} is not a 'yt admin' in {ctx.guild} 😒", delete_after=5)
+        votes = ballots.get(ctx.guild.id)
+        if votes:
+            current = 'CURRENT VOTE COUNT 🗳️\n'
+            for name in votes:
+                current += f"☑️{votes[name]} - {name}\n"
+
+            await ctx.send(current, delete_after=5*len(votes))
             return
 
-        await ctx.send(f"{ctx.author.display_name} has cleared the yt links 😉")
-        yt_links.pop(ctx.guild.id)
+        await ctx.send(f"{ctx.guild} had no votes to check 😴", delete_after=5)
+            
 
     try:
         # Run the bot requires TOKEN in .env file/environment variables
@@ -213,7 +190,7 @@ def main():
     except KeyError:
         print('You have not set a TOKEN environment variable')
 
-# A way to keep the bot on that JUST WORKS
+# A way to keep the bot on that JUST WORKS hopefully?
 from threading import Thread
 
 t = Thread(target=main())

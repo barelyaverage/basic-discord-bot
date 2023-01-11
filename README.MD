@@ -1,15 +1,14 @@
 This bot can do it all:
 ✅Greet users with a hello
-✅Tell users they are sad
-✅Keep track of a ballot for arbitrary voting reasons and show the winners
-✅Keep a list of youtube links if that ever becomes necessary and randomly pick links
+✅Acknowledge users' existence
+✅A simple, straight-forward voting system
 
-It works✅
+✅It works
 
-Bot permissions:
--Read messages
--Send messages
--Manage messages
--Attach files
+🤖 Bot permissions 🤖
+➡️Read messages
+➡️Send messages
+➡️Manage messages
+➡️Attach files
 
 Needs TOKEN='your bot token' in your environment variables/.env file 🤓
