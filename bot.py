@@ -181,7 +181,7 @@ def main():
             await ctx.send(current, delete_after=5*len(votes))
             return
 
-        await ctx.send(f"{ctx.guild} had no votes to check 😴", delete_after=5)
+        await ctx.send(f"{ctx.guild} has no votes to check 😴", delete_after=5)
             
 
     try:
