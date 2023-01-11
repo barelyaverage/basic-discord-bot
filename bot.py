@@ -37,7 +37,7 @@ def main():
 
         # Send them their picture showing how sad they look
         async with ctx.typing():
-            await ctx.send(f'@{ctx.author.display_name} is this you 🤔', file = await ctx.author.display_avatar.to_file())
+            await ctx.send(f'I believe this is {ctx.author.display_name} 🤔', file = await ctx.author.display_avatar.to_file())
 
     # Greets the user, unless there are no emojis
     @my_bot.command()
